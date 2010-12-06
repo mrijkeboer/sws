@@ -1,0 +1,28 @@
+User-agent: *
+Disallow: /lib/
+Allow: /
+
+#
+# Disallow Google adsense bot
+#
+User-agent: Mediapartners-Google
+Disallow: /
+
+#
+# Disallow Google image bot
+#
+User-agent: Googlebot-Image
+Disallow: /
+
+#
+# Disable Yahoo bot (evil)
+#
+User-agent: Slurp
+Disallow: /
+
+#
+# Disable Spinn3r (evil)
+#
+User-agent: Spinn3r
+Disallow: /
+

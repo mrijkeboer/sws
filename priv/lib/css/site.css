@@ -1,0 +1,145 @@
+/*
+ * Copyright 2010 Martijn P. Rijkeboer
+ */
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+	position: relative;
+  color: #464445;
+	background-color: #ffffff;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+img {
+  border-style: none;
+}
+
+.wrapper {
+  width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+}
+
+.header {
+  height: 5em;
+  position: relative;
+  background-color: #464445;
+  border-bottom: 2px solid #ff8800;
+}
+
+.header h1 {
+  color: #ff8800;
+  font-size: 250%;
+  line-height: 1.5em;
+}
+
+.header li {
+  display: inline;
+  font-size: 80%;
+  padding-left: 0.5em;
+}
+
+.header li > a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.header li > a:hover {
+  color: #ff8800;
+}
+
+.header li > a.current {
+  color: #ff8800;
+}
+
+.content {
+  position: relative;
+	padding-top: 2em;
+	padding-bottom: 2em;
+}
+
+.content h1 {
+  font-size: 200%;
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 0.3em;
+}
+
+.content h2 {
+  font-size: 150%;
+  margin-top: 1.0em;
+  margin-bottom: 0.3em;
+}
+
+.content h3 {
+  font-size: 110%;
+  margin-top: 1.0em;
+  margin-bottom: 0.3em;
+}
+
+.content p {
+  font-size: 16px;
+  text-align: justify;
+  line-height: 120%;
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+.content a {
+  color: #ff8800;
+} 
+
+.content a:visited {
+  color: #808080;
+}
+
+.content ul {
+  margin-left: 1.5em;
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.content li {
+  line-height: 120%;
+}
+
+.footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #464445;
+}
+
+.footer p {
+  color: #aaaaaa;
+  font-size: 80%;
+  line-height: 2em;
+}
+
+.footer p a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.footer p a:hover {
+	text-decoration: underline;
+}
+
+.clear { 
+  clear: both;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
