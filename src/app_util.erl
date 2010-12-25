@@ -4,7 +4,7 @@
 %% @author Martijn P. Rijkeboer <martijn@bunix.org>
 %% @copyright 2010 Martijn P. Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
-%% @doc SWS utilities module
+%% @doc OTP application utilities module
 %% @end
 %%
 %% The MIT license.
