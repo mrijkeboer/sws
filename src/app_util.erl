@@ -1,10 +1,10 @@
 %% -------------------------------------------------------------------
-%% sws_sub.erl - SWS supervisor module
+%% app_util.erl - OTP application utilities module
 %% 
 %% @author Martijn P. Rijkeboer <martijn@bunix.org>
 %% @copyright 2010 Martijn P. Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
-%% @doc SWS supervisor module
+%% @doc SWS utilities module
 %% @end
 %%
 %% The MIT license.
@@ -30,78 +30,53 @@
 %% IN THE SOFTWARE.
 %%
 %% -------------------------------------------------------------------
--module(sws_sup).
+-module(app_util).
 -author('Martijn Rijkeboer <martijn@bunix.org>').
 
--behaviour(supervisor).
-
-%% External exports
--export([start_link/0, upgrade/0]).
-
-%% supervisor callbacks
--export([init/1]).
+%% API
+-export([
+		get_env/2,
+		get_env/3,
+		set_env/3
+	]).
 
 
 %% -------------------------------------------------------------------
-%% @spec start_link() ->
-%%				ServerRet
-%% @doc API for starting the supervisor.o
+%% @spec get_env(Application, Par) ->
+%%				Value |
+%%				undefined
+%% @doc Returns the value of the configuration parameter Par for the
+%% Application.
 %% @end
 %% -------------------------------------------------------------------
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+get_env(Application, Par) ->
+	get_env(Application, Par, undefined).
 
 
 %% -------------------------------------------------------------------
-%% @spec upgrade() ->
+%% @spec get_env(Application, Par, DefaultValue) ->
+%%				Value |
+%%				DefaultValue
+%% @doc Returns the value of the configuration parameter Par for the
+%% Application or DefaultValue if the parameter doesn't exist.
+%% @end
+%% -------------------------------------------------------------------
+get_env(Application, Par, DefaultValue) ->
+	case application:get_env(Application, Par) of
+		{ok, Value} ->
+			Value;
+		_ ->
+			DefaultValue
+	end.
+
+
+%% -------------------------------------------------------------------
+%% @spec set_env(Application, Par, Value) ->
 %%				ok
-%% @doc Add processes if necessary.
+%% @doc Sets the value of the configuration parameter Par for the
+%% Application.
 %% @end
 %% -------------------------------------------------------------------
-upgrade() ->
-    {ok, {_, Specs}} = init([]),
-
-    Old = sets:from_list(
-            [Name || {Name, _, _, _} <- supervisor:which_children(?MODULE)]),
-    New = sets:from_list([Name || {Name, _, _, _, _, _} <- Specs]),
-    Kill = sets:subtract(Old, New),
-
-    sets:fold(fun (Id, ok) ->
-                      supervisor:terminate_child(?MODULE, Id),
-                      supervisor:delete_child(?MODULE, Id),
-                      ok
-              end, ok, Kill),
-
-    [supervisor:start_child(?MODULE, Spec) || Spec <- Specs],
-    ok.
-
-
-%% -------------------------------------------------------------------
-%% @spec init([]) ->
-%%				SupervisorTree
-%% @doc Supervisor callback.
-%% @end
-%% -------------------------------------------------------------------
-init([]) ->
-	Ip = app_util:get_env(sws, ip, "0.0.0.0"),
-	Port = app_util:get_env(sws, port, 8000),
-	DispatchConfPath = app_util:get_env(sws, dispatch_conf_path, "priv/dispatch.conf"),
-	LogDir = app_util:get_env(sws, log_dir, "priv/log"),
-
-	{ok, Dispatch} = file:consult(DispatchConfPath),
-
-	WebConfig = [
-		{ip, Ip},
-		{port, Port},
-		{log_dir, LogDir},
-		{dispatch, Dispatch}
-	],
-
-	Web = {
-		webmachine_mochiweb,
-		{webmachine_mochiweb, start, [WebConfig]},
-		permanent, 5000, worker, dynamic
-	},
-
-	{ok, { {one_for_one, 10, 10}, [Web]} }.
+set_env(Application, Par, Value) ->
+	application:set_env(Application, Par, Value).
 
