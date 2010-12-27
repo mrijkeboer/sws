@@ -112,9 +112,9 @@ page_full_path("/") ->
 page_full_path(Page) when is_list(Page) ->
 	case string:substr(Page, string:len(Page)) of
 		"/" ->
-			full_path("pages", string:concat(Page, "index.html"));
+			get_fs_path("pages", string:concat(Page, "index.html"));
 		_ ->
-			full_path("pages", string:concat(Page, ".html"))
+			get_fs_path("pages", string:concat(Page, ".html"))
 	end.
 
 
@@ -132,11 +132,11 @@ static_full_path(undefined, _Type) ->
 static_full_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
 	case Type of
 		file ->
-			full_path(Uri);
+			get_fs_path(Uri);
 		lib ->
-			full_path(Uri);
+			get_fs_path(Uri);
 		misc ->
-			full_path("misc", Uri);
+			get_fs_path("misc", Uri);
 		_ ->
 			undefined
 	end.
@@ -149,7 +149,7 @@ static_full_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
 %% @end
 %% -------------------------------------------------------------------
 template_full_path() ->
-	full_path("templates").
+	get_fs_path("templates").
 
 
 %% ===================================================================
@@ -157,29 +157,30 @@ template_full_path() ->
 %% ===================================================================
 
 %% -------------------------------------------------------------------
-%% @spec full_path(Uri) ->
-%%				FullPath |
+%% @spec get_fs_path(Uri) ->
+%%				FsPath |
 %%				undefined
-%% @doc Get the full path for the specified uri.
+%% @doc Get the relative filesystem path for the Uri.
 %% @end
 %% -------------------------------------------------------------------
-full_path(Uri) when is_list(Uri) ->
+get_fs_path(Uri) when is_list(Uri) ->
 	case cleanup(Uri) of
 		undefined ->
 			undefined;
 		CleanUri ->
-			filename:join([filename:absname(""), priv, CleanUri])
+			FsPrefix = app_util:get_env(sws, www_root, priv),
+			filename:join([FsPrefix, CleanUri])
 	end.
 
 
 %% -------------------------------------------------------------------
-%% @spec full_path(Subdir, Uri) ->
+%% @spec get_fs_path(SubDir, Uri) ->
 %%				FullPath |
 %%				undefined
-%% @doc Get the full path for the specified sub directory and uri.
+%% @doc Get the relative filesystem path for SubDir and Uri.
 %% @end
 %% -------------------------------------------------------------------
-full_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
+get_fs_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
 	case cleanup(SubDir) of
 		undefined ->
 			undefined;
@@ -188,7 +189,8 @@ full_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
 				undefined ->
 					undefined;
 				CleanUri ->
-					filename:join([filename:absname(""), priv, CleanSubDir, CleanUri])
+					FsPrefix = app_util:get_env(sws, www_root, priv),
+					filename:join([FsPrefix, CleanSubDir, CleanUri])
 			end
 	end.
 
@@ -236,58 +238,54 @@ file_readable_test() ->
 
 
 page_full_path_test() ->
-	CWD = filename:absname(""),
-	?assertEqual(filename:join([CWD, priv, "pages/home.html"]), page_full_path([])),
-	?assertEqual(filename:join([CWD, priv, "pages/home.html"]), page_full_path(undefined)),
-	?assertEqual(filename:join([CWD, priv, "pages/home.html"]), page_full_path("")),
-	?assertEqual(filename:join([CWD, priv, "pages/home.html"]), page_full_path("/")),
-	?assertEqual(filename:join([CWD, priv, "pages/home.html"]), page_full_path("/home")),
-	?assertEqual(filename:join([CWD, priv, "pages/docs.html"]), page_full_path("/docs")),
-	?assertEqual(filename:join([CWD, priv, "pages/docs/index.html"]), page_full_path("/docs/")),
-	?assertEqual(filename:join([CWD, priv, "pages/doc/toc.html"]), page_full_path("/doc/toc")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path([])),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path(undefined)),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("/")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("/home")),
+	?assertEqual(filename:join([priv, "pages/docs.html"]), page_full_path("/docs")),
+	?assertEqual(filename:join([priv, "pages/docs/index.html"]), page_full_path("/docs/")),
+	?assertEqual(filename:join([priv, "pages/doc/toc.html"]), page_full_path("/doc/toc")),
 	?assertEqual(undefined, page_full_path("/../home")),
 	?assertEqual(undefined, page_full_path("../home")).
 
 
 static_full_path_test() ->
-	CWD = filename:absname(""),
-	?assertEqual(filename:join([CWD, priv, "lib/css/site.css"]), static_full_path("/lib/css/site.css", lib)),
-	?assertEqual(filename:join([CWD, priv, "lib/css/site.css"]), static_full_path("lib/css/site.css", lib)),
-	?assertEqual(filename:join([CWD, priv, "lib/image/logo.jpg"]), static_full_path("/lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([CWD, priv, "lib/image/logo.jpg"]), static_full_path("lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([CWD, priv, "lib/js/test.js"]), static_full_path("/lib/js/test.js", lib)),
-	?assertEqual(filename:join([CWD, priv, "lib/js/test.js"]), static_full_path("lib/js/test.js", lib)),
-	?assertEqual(filename:join([CWD, priv, "files/test.jpg"]), static_full_path("/files/test.jpg", file)),
-	?assertEqual(filename:join([CWD, priv, "files/test.jpg"]), static_full_path("files/test.jpg", file)),
-	?assertEqual(filename:join([CWD, priv, "files/doc/doc.doc"]), static_full_path("/files/doc/doc.doc", file)),
-	?assertEqual(filename:join([CWD, priv, "files/doc/doc.doc"]), static_full_path("files/doc/doc.doc", file)),
-	?assertEqual(filename:join([CWD, priv, "misc/favicon.ico"]), static_full_path("/favicon.ico", misc)),
-	?assertEqual(filename:join([CWD, priv, "misc/favicon.ico"]), static_full_path("favicon.ico", misc)),
-	?assertEqual(filename:join([CWD, priv, "misc/robots.txt"]), static_full_path("/robots.txt", misc)),
-	?assertEqual(filename:join([CWD, priv, "misc/robots.txt"]), static_full_path("robots.txt", misc)),
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_full_path("/lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_full_path("lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_full_path("/lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_full_path("lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_full_path("/lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_full_path("lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_full_path("/files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_full_path("files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_full_path("/files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_full_path("files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_full_path("/favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_full_path("favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_full_path("/robots.txt", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_full_path("robots.txt", misc)),
 	?assertEqual(undefined, static_full_path("/../files/test.jpg", file)),
 	?assertEqual(undefined, static_full_path("/files/test.jpg", foobar)).
 
 
 template_full_path_test() ->
-	CWD = filename:absname(""),
-	?assertEqual(filename:join([CWD, priv, "templates"]), template_full_path()).
+	?assertEqual(filename:join([priv, "templates"]), template_full_path()).
 
 
-full_path_test() ->
-	CWD = filename:absname(""),
-	% full_path/1
-	?assertEqual(filename:join([CWD, priv, "home"]), full_path("/home")),
-	?assertEqual(filename:join([CWD, priv, "home"]), full_path("home")),
-	?assertEqual(filename:join([CWD, priv, "home/dir"]), full_path("/home/dir")),
-	?assertEqual(undefined, full_path("/../home")),
-	?assertEqual(undefined, full_path("../home")),
-	% full_path/2
-	?assertEqual(filename:join([CWD, priv, "files/home"]), full_path("files", "/home")),
-	?assertEqual(filename:join([CWD, priv, "files/home"]), full_path("files", "home")),
-	?assertEqual(filename:join([CWD, priv, "files/home/dir"]), full_path("files", "/home/dir")),
-	?assertEqual(undefined, full_path("files", "/../home")),
-	?assertEqual(undefined, full_path("files", "../home")).
+get_fs_path_test() ->
+	% get_fs_path/1
+	?assertEqual(filename:join([priv, "home"]), get_fs_path("/home")),
+	?assertEqual(filename:join([priv, "home"]), get_fs_path("home")),
+	?assertEqual(filename:join([priv, "home/dir"]), get_fs_path("/home/dir")),
+	?assertEqual(undefined, get_fs_path("/../home")),
+	?assertEqual(undefined, get_fs_path("../home")),
+	% get_fs_path/2
+	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("files", "/home")),
+	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("files", "home")),
+	?assertEqual(filename:join([priv, "files/home/dir"]), get_fs_path("files", "/home/dir")),
+	?assertEqual(undefined, get_fs_path("files", "/../home")),
+	?assertEqual(undefined, get_fs_path("files", "../home")).
 
 
 cleanup_test() ->
