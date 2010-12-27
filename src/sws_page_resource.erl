@@ -68,10 +68,10 @@ init(State) ->
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
 	Uri = wrq:path(ReqData),
-	FullPath = sws_util:page_full_path(Uri),
-	case sws_util:file_readable(FullPath) of
+	FsPath = sws_util:page_fs_path(Uri),
+	case sws_util:file_readable(FsPath) of
 		{true, FileInfo} ->
-			State1 = State ++ [{full_path, FullPath}, {file_info, FileInfo}],
+			State1 = State ++ [{fs_path, FsPath}, {file_info, FileInfo}],
 			{true, ReqData, State1};
 		_ ->
 			{false, ReqData, State}
@@ -85,10 +85,10 @@ resource_exists(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 to_html(ReqData, State) ->
-	FullPath = proplists:get_value(full_path, State),
+	FsPath = proplists:get_value(fs_path, State),
 	Menu = proplists:get_value(menu, State),
-	TemplatePath = sws_util:template_full_path(),
-	erlydtl:compile(FullPath, template, [{doc_root, TemplatePath}]),
+	TemplatePath = sws_util:template_fs_path(),
+	erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
 	{ok, Content} = template:render([{menu, Menu}]),
 	{Content, ReqData, State}.
 

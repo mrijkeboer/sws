@@ -38,9 +38,9 @@
 		add_seconds_to/2,
 		file_exists/1,
 		file_readable/1,
-		page_full_path/1, 
-		static_full_path/2,
-		template_full_path/0
+		page_fs_path/1, 
+		static_fs_path/2,
+		template_fs_path/0
 	]).
 
 -include_lib("kernel/include/file.hrl").
@@ -58,27 +58,27 @@ add_seconds_to({Date, Time}, Seconds) when is_integer(Seconds) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec file_exists(FullPath) ->
+%% @spec file_exists(FsPath) ->
 %%				true |
 %%				false
 %% @doc Check if the specified file exists.
 %% @end
 %% -------------------------------------------------------------------
-file_exists(FullPath) ->
-	filelib:is_regular(FullPath).
+file_exists(FsPath) ->
+	filelib:is_regular(FsPath).
 
 
 %% -------------------------------------------------------------------
-%% @spec file_readable(FullPath) ->
+%% @spec file_readable(FsPath) ->
 %%				{true, FileInfo} |
 %%				false
 %% @doc Check if the specified file exists and is readable.
 %% @end
 %% -------------------------------------------------------------------
-file_readable(FullPath) ->
-	case file_exists(FullPath) of
+file_readable(FsPath) ->
+	case file_exists(FsPath) of
 		true ->
-			case file:read_file_info(FullPath) of
+			case file:read_file_info(FsPath) of
 				{ok, FileInfo} ->
 					case FileInfo#file_info.access of
 						read ->
@@ -97,19 +97,19 @@ file_readable(FullPath) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec page_full_path(Uri) ->
-%%				FullPath |
+%% @spec page_fs_path(Uri) ->
+%%				FsPath |
 %%				undefined
 %% @doc Get the full path to the page for the specified uri.
 %% @end
 %% -------------------------------------------------------------------
-page_full_path([]) ->
-	page_full_path("home");
-page_full_path(undefined) ->
-	page_full_path("home");
-page_full_path("/") ->
-	page_full_path("home");
-page_full_path(Page) when is_list(Page) ->
+page_fs_path([]) ->
+	page_fs_path("home");
+page_fs_path(undefined) ->
+	page_fs_path("home");
+page_fs_path("/") ->
+	page_fs_path("home");
+page_fs_path(Page) when is_list(Page) ->
 	case string:substr(Page, string:len(Page)) of
 		"/" ->
 			get_fs_path("pages", string:concat(Page, "index.html"));
@@ -119,17 +119,17 @@ page_full_path(Page) when is_list(Page) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec static_full_path(Uri) ->
-%%				FullPath |
+%% @spec static_fs_path(Uri) ->
+%%				FsPath |
 %%				undefined
 %% @doc Get the full path to the static file for the specified uri.
 %% @end
 %% -------------------------------------------------------------------
-static_full_path([], _Type) ->
+static_fs_path([], _Type) ->
 	undefined;
-static_full_path(undefined, _Type) ->
+static_fs_path(undefined, _Type) ->
 	undefined;
-static_full_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
+static_fs_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
 	case Type of
 		file ->
 			get_fs_path(Uri);
@@ -143,12 +143,12 @@ static_full_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec template_full_path() ->
-%%				FullPath
+%% @spec template_fs_path() ->
+%%				FsPath
 %% @doc Get the full path to the templates directory.
 %% @end
 %% -------------------------------------------------------------------
-template_full_path() ->
+template_fs_path() ->
 	get_fs_path("templates").
 
 
@@ -175,7 +175,7 @@ get_fs_path(Uri) when is_list(Uri) ->
 
 %% -------------------------------------------------------------------
 %% @spec get_fs_path(SubDir, Uri) ->
-%%				FullPath |
+%%				FsPath |
 %%				undefined
 %% @doc Get the relative filesystem path for SubDir and Uri.
 %% @end
@@ -237,40 +237,40 @@ file_readable_test() ->
 	?assertNot(file_readable("/etc/shadow")).
 
 
-page_full_path_test() ->
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path([])),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path(undefined)),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("")),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("/")),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_full_path("/home")),
-	?assertEqual(filename:join([priv, "pages/docs.html"]), page_full_path("/docs")),
-	?assertEqual(filename:join([priv, "pages/docs/index.html"]), page_full_path("/docs/")),
-	?assertEqual(filename:join([priv, "pages/doc/toc.html"]), page_full_path("/doc/toc")),
-	?assertEqual(undefined, page_full_path("/../home")),
-	?assertEqual(undefined, page_full_path("../home")).
+page_fs_path_test() ->
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path([])),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path(undefined)),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("/")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("/home")),
+	?assertEqual(filename:join([priv, "pages/docs.html"]), page_fs_path("/docs")),
+	?assertEqual(filename:join([priv, "pages/docs/index.html"]), page_fs_path("/docs/")),
+	?assertEqual(filename:join([priv, "pages/doc/toc.html"]), page_fs_path("/doc/toc")),
+	?assertEqual(undefined, page_fs_path("/../home")),
+	?assertEqual(undefined, page_fs_path("../home")).
 
 
-static_full_path_test() ->
-	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_full_path("/lib/css/site.css", lib)),
-	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_full_path("lib/css/site.css", lib)),
-	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_full_path("/lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_full_path("lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_full_path("/lib/js/test.js", lib)),
-	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_full_path("lib/js/test.js", lib)),
-	?assertEqual(filename:join([priv, "files/test.jpg"]), static_full_path("/files/test.jpg", file)),
-	?assertEqual(filename:join([priv, "files/test.jpg"]), static_full_path("files/test.jpg", file)),
-	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_full_path("/files/doc/doc.doc", file)),
-	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_full_path("files/doc/doc.doc", file)),
-	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_full_path("/favicon.ico", misc)),
-	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_full_path("favicon.ico", misc)),
-	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_full_path("/robots.txt", misc)),
-	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_full_path("robots.txt", misc)),
-	?assertEqual(undefined, static_full_path("/../files/test.jpg", file)),
-	?assertEqual(undefined, static_full_path("/files/test.jpg", foobar)).
+static_fs_path_test() ->
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("/lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("/lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("/lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("/files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("/files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("/favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("/robots.txt", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("robots.txt", misc)),
+	?assertEqual(undefined, static_fs_path("/../files/test.jpg", file)),
+	?assertEqual(undefined, static_fs_path("/files/test.jpg", foobar)).
 
 
-template_full_path_test() ->
-	?assertEqual(filename:join([priv, "templates"]), template_full_path()).
+template_fs_path_test() ->
+	?assertEqual(filename:join([priv, "templates"]), template_fs_path()).
 
 
 get_fs_path_test() ->

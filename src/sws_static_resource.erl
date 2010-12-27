@@ -77,9 +77,9 @@ content_types_provided(ReqData, State) ->
 		undefined ->
 			Uri = wrq:path(ReqData),
 			Type = proplists:get_value(type, State),
-			FullPath = sws_util:static_full_path(Uri, Type),
-			Mime = webmachine_util:guess_mime(FullPath),
-			State1 = State ++ [{full_path, FullPath}, {mime, Mime}],
+			FsPath = sws_util:static_fs_path(Uri, Type),
+			Mime = webmachine_util:guess_mime(FsPath),
+			State1 = State ++ [{fs_path, FsPath}, {mime, Mime}],
 			{[{Mime, to_binary}], ReqData, State1};
 		Mime ->
 			{[{Mime, to_binary}], ReqData, State}
@@ -94,8 +94,8 @@ content_types_provided(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
-	FullPath = proplists:get_value(full_path, State),
-	case sws_util:file_readable(FullPath) of
+	FsPath = proplists:get_value(fs_path, State),
+	case sws_util:file_readable(FsPath) of
 		{true, FileInfo} ->
 			State1 = State ++ [{file_info, FileInfo}],
 			{true, ReqData, State1};
