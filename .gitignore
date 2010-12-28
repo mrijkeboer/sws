@@ -1,5 +1,4 @@
 deps/
-ebin/*.beam
-ebin/*.app
+apps/sws/ebin/*
 *.swp
 .eunit

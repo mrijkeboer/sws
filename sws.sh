@@ -9,7 +9,7 @@ SWS_DIR="/opt/sws"
 SWS_USER="sws"
 
 ERL="/usr/bin/erl"
-EBINS="$SWS_DIR/ebin $SWS_DIR/deps/*/ebin"
+EBINS="$SWS_DIR/apps/*/ebin $SWS_DIR/deps/*/ebin"
 SUDO="`which sudo` -u $SWS_USER"
 
 export WEBMACHINE_IP=127.0.0.1

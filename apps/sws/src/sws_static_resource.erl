@@ -111,8 +111,8 @@ resource_exists(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 to_binary(ReqData, State) ->
-	FullPath = proplists:get_value(full_path, State),
-	{ok, Content} = file:read_file(FullPath),
+	FsPath = proplists:get_value(fs_path, State),
+	{ok, Content} = file:read_file(FsPath),
 	{Content, ReqData, State}.
 
 
