@@ -1,4 +1,5 @@
 deps/
 apps/sws/ebin/*
+rel/sws/
 *.swp
 .eunit
