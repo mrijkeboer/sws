@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 RUNNER_SCRIPT_DIR=$(cd ${0%/*} && pwd)
 
