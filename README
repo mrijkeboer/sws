@@ -1,7 +1,7 @@
-SWS Website System
-==================
+Simple Website System
+=====================
 
-The "SWS Website System", is an Erlang program to server simple websites. It
+The "Simple Website System", is an Erlang program to serve simple websites. It
 uses Basho's Webmachine as it's webserver and the Django template language
 (Evan Miller's ErlyDTL) for rendering the webpages.
 
