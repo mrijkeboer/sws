@@ -86,10 +86,10 @@ resource_exists(ReqData, State) ->
 %% -------------------------------------------------------------------
 to_html(ReqData, State) ->
 	FsPath = proplists:get_value(fs_path, State),
-	Menu = proplists:get_value(menu, State),
+	Uri = wrq:path(ReqData),
 	TemplatePath = sws_util:template_fs_path(),
 	erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
-	{ok, Content} = template:render([{menu, Menu}]),
+	{ok, Content} = template:render([{uri, Uri}]),
 	{Content, ReqData, State}.
 
 
