@@ -2,14 +2,14 @@
 %% sws_page_resource.erl - SWS webpages resource module
 %% 
 %% @author Martijn P. Rijkeboer <martijn@bunix.org>
-%% @copyright 2010 Martijn P. Rijkeboer
+%% @copyright 2010,2011 Martijn P. Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
 %% @doc SWS webpages resource module
 %% @end
 %%
 %% The MIT license.
 %%
-%% Copyright (c) 2010 Martijn P. Rijkeboer
+%% Copyright (c) 2010,2011 Martijn P. Rijkeboer
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
