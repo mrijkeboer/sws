@@ -168,7 +168,7 @@ get_fs_path(Uri) when is_list(Uri) ->
 		undefined ->
 			undefined;
 		CleanUri ->
-			FsPrefix = app_util:get_env(sws, www_root, priv),
+			FsPrefix = sws_config:www_root_path(),
 			filename:join([FsPrefix, CleanUri])
 	end.
 
@@ -189,7 +189,7 @@ get_fs_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
 				undefined ->
 					undefined;
 				CleanUri ->
-					FsPrefix = app_util:get_env(sws, www_root, priv),
+					FsPrefix = sws_config:www_root_path(),
 					filename:join([FsPrefix, CleanSubDir, CleanUri])
 			end
 	end.

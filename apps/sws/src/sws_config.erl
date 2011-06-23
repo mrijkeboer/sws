@@ -1,15 +1,15 @@
 %% -------------------------------------------------------------------
-%% sws_sub.erl - SWS supervisor module
+%% sws_config.erl - SWS application configuration module
 %% 
 %% @author Martijn Rijkeboer <martijn@bunix.org>
-%% @copyright 2010,2011 Martijn Rijkeboer
+%% @copyright 2011 Martijn Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
-%% @doc SWS supervisor module
+%% @doc SWS application configuration module
 %% @end
 %%
 %% The MIT license.
 %%
-%% Copyright (c) 2010,2011 Martijn Rijkeboer
+%% Copyright (c) 2011 Martijn Rijkeboer
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -30,78 +30,83 @@
 %% IN THE SOFTWARE.
 %%
 %% -------------------------------------------------------------------
--module(sws_sup).
+-module(sws_config).
 -author('Martijn Rijkeboer <martijn@bunix.org>').
 
--behaviour(supervisor).
-
-%% External exports
--export([start_link/0, upgrade/0]).
-
-%% supervisor callbacks
--export([init/1]).
+%% API
+-export([
+		ip/0,
+		port/0,
+		dispatch_conf_path/0,
+		log_dir_path/0,
+		www_root_path/0
+	]).
 
 
 %% -------------------------------------------------------------------
-%% @spec start_link() ->
-%%				ServerRet
-%% @doc API for starting the supervisor.o
+%% @spec ip() ->
+%%				Value
+%% @doc Returns the IP address to bind to.
 %% @end
 %% -------------------------------------------------------------------
-start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+ip() ->
+	get_value(ip, "0.0.0.0").
 
 
 %% -------------------------------------------------------------------
-%% @spec upgrade() ->
-%%				ok
-%% @doc Add processes if necessary.
+%% @spec port() ->
+%%				Value
+%% @doc Returns the port to listen on.
 %% @end
 %% -------------------------------------------------------------------
-upgrade() ->
-	{ok, {_, Specs}} = init([]),
-
-	Old = sets:from_list(
-		[Name || {Name, _, _, _} <- supervisor:which_children(?MODULE)]),
-	New = sets:from_list([Name || {Name, _, _, _, _, _} <- Specs]),
-	Kill = sets:subtract(Old, New),
-
-	sets:fold(fun (Id, ok) ->
-				supervisor:terminate_child(?MODULE, Id),
-				supervisor:delete_child(?MODULE, Id),
-				ok
-		end, ok, Kill),
-
-	[supervisor:start_child(?MODULE, Spec) || Spec <- Specs],
-	ok.
+port() ->
+	get_value(port, 8000).
 
 
 %% -------------------------------------------------------------------
-%% @spec init([]) ->
-%%				SupervisorTree
-%% @doc Supervisor callback.
+%% @spec dispatch_conf_path() ->
+%%				Value
+%% @doc Returns the path to the dispatch.conf file.
 %% @end
 %% -------------------------------------------------------------------
-init([]) ->
-	Ip = sws_config:ip(),
-	Port = sws_config:port(),
-	DispatchConfPath = sws_config:dispatch_conf_path(),
-	LogDir = sws_config:log_dir_path(),
+dispatch_conf_path() ->
+	get_value(dispatch_conf_path, "priv/dispatch.conf").
 
-	{ok, Dispatch} = file:consult(DispatchConfPath),
 
-	WebConfig = [
-		{ip, Ip},
-		{port, Port},
-		{log_dir, LogDir},
-		{dispatch, Dispatch}
-	],
+%% -------------------------------------------------------------------
+%% @spec log_dir_path() ->
+%%				Value
+%% @doc Returns the path to the log directory.
+%% @end
+%% -------------------------------------------------------------------
+log_dir_path() ->
+	get_value(log_dir_path, "priv/log").
 
-	Web = {
-		webmachine_mochiweb,
-		{webmachine_mochiweb, start, [WebConfig]},
-		permanent, 5000, worker, dynamic
-	},
 
-	{ok, { {one_for_one, 10, 10}, [Web]} }.
+%% -------------------------------------------------------------------
+%% @spec www_root_path() ->
+%%				Value
+%% @doc Returns the path to the www root directory.
+%% @end
+%% -------------------------------------------------------------------
+www_root_path() ->
+	get_value(www_root_path, "priv").
+
+
+%% -------------------------------------------------------------------
+%% @spec get_value(Par, DefaultValue) ->
+%%				Value |
+%%				DefaultValue
+%% @doc Returns the value of the configuration parameter Par or
+%% DefaultValue if the parameter doesn't exist.
+%% @end
+%% -------------------------------------------------------------------
+get_value(Par, DefaultValue) ->
+	case application:get_env(sws, Par) of
+		{ok, Value} ->
+			Value;
+		_ ->
+			DefaultValue
+	end.
+
 
