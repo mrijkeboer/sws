@@ -17,10 +17,6 @@ export WEBMACHINE_PORT=8000
 
 
 start() {
-	${SUDO} ${ERL} -pa ${EBINS} -name ${SNAME}@${HOSTNAME} -boot start_sasl -detached -s reloader -s sws
-}
-
-start_dev() {
 	${ERL} -pa ${EBINS} -boot start_sasl -s reloader -s sws
 }
 
@@ -37,9 +33,6 @@ case $1 in
 		echo  "Starting SWS: $SNAME"
 		start
 		;;
-	start-dev)
-		start_dev
-		;;
 	stop)
 		echo "Stopping SWS: $SNAME"
 		stop
@@ -53,7 +46,7 @@ case $1 in
 		shell
 		;;
 	*)
-		echo "Usage: $SELF {start|stop|restart|shell|start-dev}"
+		echo "Usage: $SELF {start|stop|restart|shell}"
 		exit 1
 esac
 
