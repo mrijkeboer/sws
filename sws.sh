@@ -12,10 +12,6 @@ ERL="/usr/bin/erl"
 EBINS="$SWS_DIR/apps/*/ebin $SWS_DIR/deps/*/ebin"
 SUDO="`which sudo` -u $SWS_USER"
 
-export WEBMACHINE_IP=127.0.0.1
-export WEBMACHINE_PORT=8000
-
-
 start() {
 	${ERL} -pa ${EBINS} -boot start_sasl -s reloader -s sws
 }
