@@ -154,3 +154,46 @@ get_value(Par, DefaultValue) ->
 	end.
 
 
+%% ===================================================================
+%% Test functions
+%% ===================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+-ifdef(TEST).
+
+ip_test() ->
+	?assertEqual("127.0.0.1", ip()).
+
+
+port_test() ->
+	?assertEqual(8000, port()).
+
+
+dispatch_conf_path_test() ->
+	?assertEqual("priv/dispatch.conf", dispatch_conf_path()).
+
+
+log_dir_path_test() ->
+	?assertEqual("priv/log", log_dir_path()).
+
+
+www_root_path_test() ->
+	?assertEqual("priv", www_root_path()).
+
+
+page_expire_time_test() ->
+	?assertEqual(0, page_expire_time()).
+
+
+file_expire_time_test() ->
+	?assertEqual(0, file_expire_time()).
+
+
+lib_expire_time_test() ->
+	?assertEqual(0, lib_expire_time()).
+
+
+misc_expire_time_test() ->
+	?assertEqual(0, misc_expire_time()).
+
+-endif.
