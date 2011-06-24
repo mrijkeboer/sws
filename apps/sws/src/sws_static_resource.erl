@@ -137,11 +137,11 @@ expires(ReqData, State) ->
 	UtcNow = calendar:universal_time(),
 	case proplists:get_value(type, State) of
 		file ->
-			Expires = sws_util:add_seconds_to(UtcNow, 24 * 60 * 60);
+			Expires = sws_util:add_seconds_to(UtcNow, sws_config:file_expire_time());
 		lib ->
-			Expires = sws_util:add_seconds_to(UtcNow, 60 * 60);
+			Expires = sws_util:add_seconds_to(UtcNow, sws_config:lib_expire_time());
 		misc ->
-			Expires = sws_util:add_seconds_to(UtcNow, 30 * 24 * 60 * 60);
+			Expires = sws_util:add_seconds_to(UtcNow, sws_config:misc_expire_time());
 		_ ->
 			Expires = undefined
 	end,

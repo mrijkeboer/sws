@@ -39,7 +39,11 @@
 		port/0,
 		dispatch_conf_path/0,
 		log_dir_path/0,
-		www_root_path/0
+		www_root_path/0,
+		page_expire_time/0,
+		file_expire_time/0,
+		lib_expire_time/0,
+		misc_expire_time/0
 	]).
 
 
@@ -91,6 +95,46 @@ log_dir_path() ->
 %% -------------------------------------------------------------------
 www_root_path() ->
 	get_value(www_root_path, "priv").
+
+
+%% -------------------------------------------------------------------
+%% @spec page_expire_time() ->
+%%				Value
+%% @doc Returns the expire time for pages.
+%% @end
+%% -------------------------------------------------------------------
+page_expire_time() ->
+	get_value(file_expire_time, 0).
+
+
+%% -------------------------------------------------------------------
+%% @spec file_expire_time() ->
+%%				Value
+%% @doc Returns the expire time for files.
+%% @end
+%% -------------------------------------------------------------------
+file_expire_time() ->
+	get_value(file_expire_time, 0).
+
+
+%% -------------------------------------------------------------------
+%% @spec lib_expire_time() ->
+%%				Value
+%% @doc Returns the expire time for library files (css, js, ...).
+%% @end
+%% -------------------------------------------------------------------
+lib_expire_time() ->
+	get_value(lib_expire_time, 0).
+
+
+%% -------------------------------------------------------------------
+%% @spec misc_expire_time() ->
+%%				Value
+%% @doc Returns the expire time for miscellaneous files (robots.txt).
+%% @end
+%% -------------------------------------------------------------------
+misc_expire_time() ->
+	get_value(misc_expire_time, 0).
 
 
 %% -------------------------------------------------------------------

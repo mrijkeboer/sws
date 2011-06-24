@@ -112,6 +112,6 @@ last_modified(ReqData, State) ->
 %% -------------------------------------------------------------------
 expires(ReqData, State) ->
 	UtcNow = calendar:universal_time(),
-	Expires = sws_util:add_seconds_to(UtcNow, 60 * 60),
+	Expires = sws_util:add_seconds_to(UtcNow, sws_config:page_expire_time()),
 	{Expires, ReqData, State}.
 
