@@ -223,7 +223,9 @@ get_fs_prefix(_Host, false) ->
 %% @doc Get the name of the host from HostString.
 %% @end
 %% -------------------------------------------------------------------
-get_host(HostString) ->
+get_host(HostString) when is_atom(HostString) ->
+	get_host(atom_to_list(HostString));
+get_host(HostString) when is_list(HostString) ->
 	case string:tokens(HostString, ":") of
 		[Host, _Port] ->
 			Host;
@@ -334,6 +336,7 @@ get_fs_prefix_test() ->
 
 
 get_host_test() ->
+	?assertEqual("localhost", get_host(localhost)),
 	?assertEqual("localhost", get_host("localhost")),
 	?assertEqual("localhost", get_host("localhost:8000")).
 
