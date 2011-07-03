@@ -43,7 +43,8 @@
 		page_expire_time/0,
 		file_expire_time/0,
 		lib_expire_time/0,
-		misc_expire_time/0
+		misc_expire_time/0,
+		virtual_hosting/0
 	]).
 
 
@@ -138,6 +139,17 @@ misc_expire_time() ->
 
 
 %% -------------------------------------------------------------------
+%% @spec virtual_hosting() ->
+%%				Value
+%% @doc Returns whether this machine serves a single host or multiple
+%% virtual hosts.
+%% @end
+%% -------------------------------------------------------------------
+virtual_hosting() ->
+	get_value(virtual_hosting, false).
+
+
+%% -------------------------------------------------------------------
 %% @spec get_value(Par, DefaultValue) ->
 %%				Value |
 %%				DefaultValue
@@ -195,5 +207,9 @@ lib_expire_time_test() ->
 
 misc_expire_time_test() ->
 	?assertEqual(0, misc_expire_time()).
+
+
+virtual_hosting_test() ->
+	?assertEqual(false, virtual_hosting()).
 
 -endif.

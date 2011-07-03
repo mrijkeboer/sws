@@ -38,9 +38,10 @@
 		add_seconds_to/2,
 		file_exists/1,
 		file_readable/1,
-		page_fs_path/1, 
-		static_fs_path/2,
-		template_fs_path/0
+		get_host/1,
+		page_fs_path/2, 
+		static_fs_path/3,
+		template_fs_path/1
 	]).
 
 -include_lib("kernel/include/file.hrl").
@@ -97,59 +98,59 @@ file_readable(FsPath) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec page_fs_path(Uri) ->
+%% @spec page_fs_path(Host, Uri) ->
 %%				FsPath |
 %%				undefined
-%% @doc Get the full path to the page for the specified uri.
+%% @doc Get the path to the page for the Host and Uri.
 %% @end
 %% -------------------------------------------------------------------
-page_fs_path([]) ->
-	page_fs_path("home");
-page_fs_path(undefined) ->
-	page_fs_path("home");
-page_fs_path("/") ->
-	page_fs_path("home");
-page_fs_path(Page) when is_list(Page) ->
+page_fs_path(Host, []) ->
+	page_fs_path(Host, "home");
+page_fs_path(Host, undefined) ->
+	page_fs_path(Host, "home");
+page_fs_path(Host, "/") ->
+	page_fs_path(Host, "home");
+page_fs_path(Host, Page) when is_list(Page) ->
 	case string:substr(Page, string:len(Page)) of
 		"/" ->
-			get_fs_path("pages", string:concat(Page, "index.html"));
+			get_fs_path(Host, "pages", string:concat(Page, "index.html"));
 		_ ->
-			get_fs_path("pages", string:concat(Page, ".html"))
+			get_fs_path(Host, "pages", string:concat(Page, ".html"))
 	end.
 
 
 %% -------------------------------------------------------------------
-%% @spec static_fs_path(Uri) ->
+%% @spec static_fs_path(Host, Uri, Type) ->
 %%				FsPath |
 %%				undefined
-%% @doc Get the full path to the static file for the specified uri.
+%% @doc Get the path to the static file for Host, Uri and Type.
 %% @end
 %% -------------------------------------------------------------------
-static_fs_path([], _Type) ->
+static_fs_path(_Host, [], _Type) ->
 	undefined;
-static_fs_path(undefined, _Type) ->
+static_fs_path(_Host, undefined, _Type) ->
 	undefined;
-static_fs_path(Uri, Type) when is_list(Uri), is_atom(Type) ->
+static_fs_path(Host, Uri, Type) when is_list(Uri), is_atom(Type) ->
 	case Type of
 		file ->
-			get_fs_path(Uri);
+			get_fs_path(Host, Uri);
 		lib ->
-			get_fs_path(Uri);
+			get_fs_path(Host, Uri);
 		misc ->
-			get_fs_path("misc", Uri);
+			get_fs_path(Host, "misc", Uri);
 		_ ->
 			undefined
 	end.
 
 
 %% -------------------------------------------------------------------
-%% @spec template_fs_path() ->
+%% @spec template_fs_path(Host) ->
 %%				FsPath
-%% @doc Get the full path to the templates directory.
+%% @doc Get the path to the templates directory for Host.
 %% @end
 %% -------------------------------------------------------------------
-template_fs_path() ->
-	get_fs_path("templates").
+template_fs_path(Host) ->
+	get_fs_path(Host, "templates").
 
 
 %% ===================================================================
@@ -157,30 +158,29 @@ template_fs_path() ->
 %% ===================================================================
 
 %% -------------------------------------------------------------------
-%% @spec get_fs_path(Uri) ->
+%% @spec get_fs_path(Host, Uri) ->
 %%				FsPath |
 %%				undefined
-%% @doc Get the relative filesystem path for the Uri.
+%% @doc Get the filesystem path for the Host and Uri.
 %% @end
 %% -------------------------------------------------------------------
-get_fs_path(Uri) when is_list(Uri) ->
+get_fs_path(Host, Uri) when is_list(Uri) ->
 	case cleanup(Uri) of
 		undefined ->
 			undefined;
 		CleanUri ->
-			FsPrefix = sws_config:www_root_path(),
-			filename:join([FsPrefix, CleanUri])
+			filename:join([get_fs_prefix(Host), CleanUri])
 	end.
 
 
 %% -------------------------------------------------------------------
-%% @spec get_fs_path(SubDir, Uri) ->
+%% @spec get_fs_path(Host, SubDir, Uri) ->
 %%				FsPath |
 %%				undefined
-%% @doc Get the relative filesystem path for SubDir and Uri.
+%% @doc Get the filesystem path for Host, SubDir and Uri.
 %% @end
 %% -------------------------------------------------------------------
-get_fs_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
+get_fs_path(Host, SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
 	case cleanup(SubDir) of
 		undefined ->
 			undefined;
@@ -189,9 +189,48 @@ get_fs_path(SubDir, Uri) when is_list(SubDir), is_list(Uri) ->
 				undefined ->
 					undefined;
 				CleanUri ->
-					FsPrefix = sws_config:www_root_path(),
-					filename:join([FsPrefix, CleanSubDir, CleanUri])
+					filename:join([get_fs_prefix(Host), CleanSubDir, CleanUri])
 			end
+	end.
+
+
+%% -------------------------------------------------------------------
+%% @spec get_fs_prefix(Host) ->
+%%				FsPrefix
+%% @doc Get the filesystem prefix for the Host.
+%% @end
+%% -------------------------------------------------------------------
+get_fs_prefix(Host) ->
+	get_fs_prefix(Host, sws_config:virtual_hosting()).
+
+
+%% -------------------------------------------------------------------
+%% @spec get_fs_prefix(Host, VirtualHosting) ->
+%%				FsPrefix
+%% @doc Get the filesystem prefix for the Host and VirtualHosting.
+%% @end
+%% -------------------------------------------------------------------
+get_fs_prefix(Host, true) ->
+	filename:join([sws_config:www_root_path(), Host]);
+get_fs_prefix(_Host, false) ->
+	sws_config:www_root_path().
+
+
+%% -------------------------------------------------------------------
+%% @spec get_host(HostString) ->
+%%				Host |
+%%				undefined
+%% @doc Get the name of the host from HostString.
+%% @end
+%% -------------------------------------------------------------------
+get_host(HostString) ->
+	case string:tokens(HostString, ":") of
+		[Host, _Port] ->
+			Host;
+		[Host] ->
+			Host;
+		[] ->
+			undefined
 	end.
 
 
@@ -238,54 +277,65 @@ file_readable_test() ->
 
 
 page_fs_path_test() ->
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path([])),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path(undefined)),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("")),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("/")),
-	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("/home")),
-	?assertEqual(filename:join([priv, "pages/docs.html"]), page_fs_path("/docs")),
-	?assertEqual(filename:join([priv, "pages/docs/index.html"]), page_fs_path("/docs/")),
-	?assertEqual(filename:join([priv, "pages/doc/toc.html"]), page_fs_path("/doc/toc")),
-	?assertEqual(undefined, page_fs_path("/../home")),
-	?assertEqual(undefined, page_fs_path("../home")).
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("", [])),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("", undefined)),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("", "")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("", "/")),
+	?assertEqual(filename:join([priv, "pages/home.html"]), page_fs_path("", "/home")),
+	?assertEqual(filename:join([priv, "pages/docs.html"]), page_fs_path("", "/docs")),
+	?assertEqual(filename:join([priv, "pages/docs/index.html"]), page_fs_path("", "/docs/")),
+	?assertEqual(filename:join([priv, "pages/doc/toc.html"]), page_fs_path("", "/doc/toc")),
+	?assertEqual(undefined, page_fs_path("", "/../home")),
+	?assertEqual(undefined, page_fs_path("", "../home")).
 
 
 static_fs_path_test() ->
-	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("/lib/css/site.css", lib)),
-	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("lib/css/site.css", lib)),
-	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("/lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("lib/image/logo.jpg", lib)),
-	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("/lib/js/test.js", lib)),
-	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("lib/js/test.js", lib)),
-	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("/files/test.jpg", file)),
-	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("files/test.jpg", file)),
-	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("/files/doc/doc.doc", file)),
-	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("files/doc/doc.doc", file)),
-	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("/favicon.ico", misc)),
-	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("favicon.ico", misc)),
-	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("/robots.txt", misc)),
-	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("robots.txt", misc)),
-	?assertEqual(undefined, static_fs_path("/../files/test.jpg", file)),
-	?assertEqual(undefined, static_fs_path("/files/test.jpg", foobar)).
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("", "/lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/css/site.css"]), static_fs_path("", "lib/css/site.css", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("", "/lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/image/logo.jpg"]), static_fs_path("", "lib/image/logo.jpg", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("", "/lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "lib/js/test.js"]), static_fs_path("", "lib/js/test.js", lib)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("", "/files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/test.jpg"]), static_fs_path("", "files/test.jpg", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("", "/files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "files/doc/doc.doc"]), static_fs_path("", "files/doc/doc.doc", file)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("", "/favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/favicon.ico"]), static_fs_path("", "favicon.ico", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("", "/robots.txt", misc)),
+	?assertEqual(filename:join([priv, "misc/robots.txt"]), static_fs_path("", "robots.txt", misc)),
+	?assertEqual(undefined, static_fs_path("", "/../files/test.jpg", file)),
+	?assertEqual(undefined, static_fs_path("", "/files/test.jpg", foobar)).
 
 
 template_fs_path_test() ->
-	?assertEqual(filename:join([priv, "templates"]), template_fs_path()).
+	?assertEqual(filename:join([priv, "templates"]), template_fs_path("")).
 
 
 get_fs_path_test() ->
-	% get_fs_path/1
-	?assertEqual(filename:join([priv, "home"]), get_fs_path("/home")),
-	?assertEqual(filename:join([priv, "home"]), get_fs_path("home")),
-	?assertEqual(filename:join([priv, "home/dir"]), get_fs_path("/home/dir")),
-	?assertEqual(undefined, get_fs_path("/../home")),
-	?assertEqual(undefined, get_fs_path("../home")),
 	% get_fs_path/2
-	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("files", "/home")),
-	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("files", "home")),
-	?assertEqual(filename:join([priv, "files/home/dir"]), get_fs_path("files", "/home/dir")),
-	?assertEqual(undefined, get_fs_path("files", "/../home")),
-	?assertEqual(undefined, get_fs_path("files", "../home")).
+	?assertEqual(filename:join([priv, "home"]), get_fs_path("", "/home")),
+	?assertEqual(filename:join([priv, "home"]), get_fs_path("", "home")),
+	?assertEqual(filename:join([priv, "home/dir"]), get_fs_path("", "/home/dir")),
+	?assertEqual(undefined, get_fs_path("", "/../home")),
+	?assertEqual(undefined, get_fs_path("", "../home")),
+	% get_fs_path/3
+	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("", "files", "/home")),
+	?assertEqual(filename:join([priv, "files/home"]), get_fs_path("", "files", "home")),
+	?assertEqual(filename:join([priv, "files/home/dir"]), get_fs_path("", "files", "/home/dir")),
+	?assertEqual(undefined, get_fs_path("", "files", "/../home")),
+	?assertEqual(undefined, get_fs_path("", "files", "../home")).
+
+
+get_fs_prefix_test() ->
+	% get_fs_prefix/1
+	?assertEqual("priv", get_fs_prefix("localhost", false)),
+	?assertEqual("priv/localhost", get_fs_prefix("localhost", true)).
+
+
+get_host_test() ->
+	?assertEqual("localhost", get_host("localhost")),
+	?assertEqual("localhost", get_host("localhost:8000")).
 
 
 cleanup_test() ->

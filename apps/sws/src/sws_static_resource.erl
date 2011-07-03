@@ -75,11 +75,12 @@ init(State) ->
 content_types_provided(ReqData, State) ->
 	case proplists:get_value(mime, State) of
 		undefined ->
+			Host = sws_util:get_host(wrq:get_req_header(host, ReqData)),
 			Uri = wrq:path(ReqData),
 			Type = proplists:get_value(type, State),
-			FsPath = sws_util:static_fs_path(Uri, Type),
+			FsPath = sws_util:static_fs_path(Host, Uri, Type),
 			Mime = webmachine_util:guess_mime(FsPath),
-			State1 = State ++ [{fs_path, FsPath}, {mime, Mime}],
+			State1 = State ++ [{host, Host}, {uri, Uri}, {fs_path, FsPath}, {mime, Mime}],
 			{[{Mime, to_binary}], ReqData, State1};
 		Mime ->
 			{[{Mime, to_binary}], ReqData, State}

@@ -67,11 +67,12 @@ init(State) ->
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
+	Host = sws_util:get_host(wrq:get_req_header(host, ReqData)),
 	Uri = wrq:path(ReqData),
-	FsPath = sws_util:page_fs_path(Uri),
+	FsPath = sws_util:page_fs_path(Host, Uri),
 	case sws_util:file_readable(FsPath) of
 		{true, FileInfo} ->
-			State1 = State ++ [{fs_path, FsPath}, {file_info, FileInfo}],
+			State1 = State ++ [{host, Host}, {uri, Uri}, {fs_path, FsPath}, {file_info, FileInfo}],
 			{true, ReqData, State1};
 		_ ->
 			{false, ReqData, State}
@@ -85,9 +86,10 @@ resource_exists(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 to_html(ReqData, State) ->
+	Host = proplists:get_value(host, State),
+	Uri = proplists:get_value(uri, State),
 	FsPath = proplists:get_value(fs_path, State),
-	Uri = wrq:path(ReqData),
-	TemplatePath = sws_util:template_fs_path(),
+	TemplatePath = sws_util:template_fs_path(Host),
 	erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
 	{ok, Content} = template:render([{uri, Uri}]),
 	{Content, ReqData, State}.
