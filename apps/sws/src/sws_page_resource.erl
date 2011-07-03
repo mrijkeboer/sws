@@ -63,7 +63,7 @@ init(State) ->
 %% -------------------------------------------------------------------
 %% @spec encodings_provided(ReqData, State) ->
 %%				{[{"identity", fun(X) -> X end},
-%%				  {"gzip", fun(X) -> zlib:gzip(x) end}],
+%%				  {"gzip", fun(X) -> zlib:gzip(X) end}],
 %%				 ReqData, State}
 %% @doc Return encodings provided.
 %% @end
