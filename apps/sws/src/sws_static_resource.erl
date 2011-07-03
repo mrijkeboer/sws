@@ -37,6 +37,7 @@
 -export([
 		init/1,
 		content_types_provided/2,
+		encodings_provided/2,
 		resource_exists/2,
 		to_binary/2,
 		last_modified/2,
@@ -85,6 +86,24 @@ content_types_provided(ReqData, State) ->
 		Mime ->
 			{[{Mime, to_binary}], ReqData, State}
 	end.
+
+
+%% -------------------------------------------------------------------
+%% @spec encodings_provided(ReqData, State) ->
+%%				{[{"identity", fun(X) -> X end},
+%%				  {"gzip", fun(X) -> zlib:gzip(X) end}],
+%%				 ReqData, State}
+%% @doc Return encodings provided.
+%% @end
+%% -------------------------------------------------------------------
+encodings_provided(ReqData, State) ->
+	{
+		[
+			{"identity", fun(X) -> X end},
+			{"gzip", fun(X) -> zlib:gzip(X) end}
+		],
+		ReqData, State
+	}.
 
 
 %% -------------------------------------------------------------------

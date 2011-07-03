@@ -36,6 +36,7 @@
 %% API
 -export([
 		init/1,
+		encodings_provided/2,
 		resource_exists/2,
 		to_html/2,
 		last_modified/2,
@@ -57,6 +58,24 @@
 %% -------------------------------------------------------------------
 init(State) ->
 	{ok, State}.
+
+
+%% -------------------------------------------------------------------
+%% @spec encodings_provided(ReqData, State) ->
+%%				{[{"identity", fun(X) -> X end},
+%%				  {"gzip", fun(X) -> zlib:gzip(x) end}],
+%%				 ReqData, State}
+%% @doc Return encodings provided.
+%% @end
+%% -------------------------------------------------------------------
+encodings_provided(ReqData, State) ->
+	{
+		[
+			{"identity", fun(X) -> X end},
+			{"gzip", fun(X) -> zlib:gzip(X) end}
+		],
+		ReqData, State
+	}.
 
 
 %% -------------------------------------------------------------------
