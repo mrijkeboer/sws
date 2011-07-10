@@ -1,15 +1,15 @@
 %% -------------------------------------------------------------------
 %% sws_static_resource.erl - SWS static files resource module
 %% 
-%% @author Martijn P. Rijkeboer <martijn@bunix.org>
-%% @copyright 2010 Martijn P. Rijkeboer
+%% @author Martijn Rijkeboer <martijn@bunix.org>
+%% @copyright 2010, 2011 Martijn Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
 %% @doc SWS static files resource module
 %% @end
 %%
 %% The MIT license.
 %%
-%% Copyright (c) 2010 Martijn P. Rijkeboer
+%% Copyright (c) 2010, 2011 Martijn Rijkeboer
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -76,7 +76,7 @@ init(State) ->
 content_types_provided(ReqData, State) ->
 	case proplists:get_value(mime, State) of
 		undefined ->
-			Host = sws_util:get_host(wrq:get_req_header(host, ReqData)),
+			Host = sws_util:get_host(ReqData),
 			Uri = wrq:path(ReqData),
 			Type = proplists:get_value(type, State),
 			FsPath = sws_util:static_fs_path(Host, Uri, Type),

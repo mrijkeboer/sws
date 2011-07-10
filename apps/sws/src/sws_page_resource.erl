@@ -1,15 +1,15 @@
 %% -------------------------------------------------------------------
 %% sws_page_resource.erl - SWS webpages resource module
 %% 
-%% @author Martijn P. Rijkeboer <martijn@bunix.org>
-%% @copyright 2010,2011 Martijn P. Rijkeboer
+%% @author Martijn Rijkeboer <martijn@bunix.org>
+%% @copyright 2010, 2011 Martijn Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
 %% @doc SWS webpages resource module
 %% @end
 %%
 %% The MIT license.
 %%
-%% Copyright (c) 2010,2011 Martijn P. Rijkeboer
+%% Copyright (c) 2010, 2011 Martijn Rijkeboer
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -86,7 +86,7 @@ encodings_provided(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
-	Host = sws_util:get_host(wrq:get_req_header(host, ReqData)),
+	Host = sws_util:get_host(ReqData),
 	Uri = wrq:path(ReqData),
 	FsPath = sws_util:page_fs_path(Host, Uri),
 	case sws_util:file_readable(FsPath) of

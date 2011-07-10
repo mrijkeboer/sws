@@ -1,15 +1,15 @@
 %% -------------------------------------------------------------------
 %% sws_util.erl - SWS utilities module
 %% 
-%% @author Martijn P. Rijkeboer <martijn@bunix.org>
-%% @copyright 2010 Martijn P. Rijkeboer
+%% @author Martijn Rijkeboer <martijn@bunix.org>
+%% @copyright 2010, 2011 Martijn Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
 %% @doc SWS utilities module
 %% @end
 %%
 %% The MIT license.
 %%
-%% Copyright (c) 2010 Martijn P. Rijkeboer
+%% Copyright (c) 2010, 2011 Martijn Rijkeboer
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -217,15 +217,44 @@ get_fs_prefix(_Host, false) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec get_host(HostString) ->
+%% @spec get_host(ReqData) ->
 %%				Host |
 %%				undefined
-%% @doc Get the name of the host from HostString.
+%% @doc Get the name of the host from the request data.
 %% @end
 %% -------------------------------------------------------------------
-get_host(HostString) when is_atom(HostString) ->
-	get_host(atom_to_list(HostString));
-get_host(HostString) when is_list(HostString) ->
+get_host(ReqData) ->
+	HostString = case wrq:get_req_header("x-forwarded-host", ReqData) of
+		undefined ->
+			case wrq:get_req_header("x-forwarded-server", ReqData) of
+				undefined ->
+					case wrq:get_req_header("host", ReqData) of
+						undefined ->
+							undefined;
+						Host ->
+							Host
+					end;
+				ForwardedServer ->
+					ForwardedServer
+			end;
+		ForwardedHost ->
+			ForwardedHost
+	end,
+	HostPart = get_host_part(HostString),
+	io:format("~p~n", [HostPart]),
+	HostPart.
+
+
+%% -------------------------------------------------------------------
+%% @spec get_host_part(HostString) ->
+%%				Host |
+%%				undefined
+%% @doc Get the name of the host from host string.
+%% @end
+%% -------------------------------------------------------------------
+get_host_part(undefined) ->
+	undefined;
+get_host_part(HostString) ->
 	case string:tokens(HostString, ":") of
 		[Host, _Port] ->
 			Host;
@@ -330,15 +359,26 @@ get_fs_path_test() ->
 
 
 get_fs_prefix_test() ->
-	% get_fs_prefix/1
+	% get_fs_prefix/2
 	?assertEqual("priv", get_fs_prefix("localhost", false)),
 	?assertEqual("priv/localhost", get_fs_prefix("localhost", true)).
 
 
 get_host_test() ->
-	?assertEqual("localhost", get_host(localhost)),
-	?assertEqual("localhost", get_host("localhost")),
-	?assertEqual("localhost", get_host("localhost:8000")).
+	?assertEqual("host", get_host(new_wrq([{"Host", "host:8000"}]))),
+	?assertEqual("fhost", get_host(new_wrq([{"X-Forwarded-Host", "fhost:8000"}]))),
+	?assertEqual("fserver", get_host(new_wrq([{"X-Forwarded-Server", "fserver:8000"}]))),
+	?assertEqual("fhost", get_host(new_wrq([
+					{"X-Forwarded-Server", "fserver:8000"},
+					{"X-Forwarded-Host", "fhost:8000"},
+					{"Host", "host:8000"}
+				]))).
+
+
+get_host_part_test() ->
+	?assertEqual(undefined, get_host_part(undefined)),
+	?assertEqual("localhost", get_host_part("localhost")),
+	?assertEqual("localhost", get_host_part("localhost:8000")).
 
 
 cleanup_test() ->
@@ -347,5 +387,9 @@ cleanup_test() ->
 	?assertEqual("./home", cleanup("/./home")),
 	?assertEqual(undefined, cleanup("/../home")),
 	?assertEqual(undefined, cleanup("/home/../../bla")).
+
+
+new_wrq(Headers) ->
+	wrq:create("GET", {1, 1}, "/", mochiweb_headers:from_list(Headers)).
 
 -endif.
