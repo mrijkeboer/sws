@@ -240,9 +240,7 @@ get_host(ReqData) ->
 		ForwardedHost ->
 			ForwardedHost
 	end,
-	HostPart = get_host_part(HostString),
-	io:format("~p~n", [HostPart]),
-	HostPart.
+	get_host_part(HostString).
 
 
 %% -------------------------------------------------------------------
