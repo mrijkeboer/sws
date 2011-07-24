@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head> 
-		<meta charset="utf-8" /> 
-		<meta name="keywords" content="SWS, Simple Website System, Webmachine, Erlang, Django" /> 
-		<meta name="description" content="SWS: Simple Website System" /> 
-		<meta name="author" content="Martijn Rijkeboer" /> 
-		<link rel="stylesheet" media="screen" href="/lib/css/reset.css" /> 
-		<link rel="stylesheet" media="screen" href="/lib/css/site.css" /> 
+<head> 
+<meta charset="utf-8" /> 
+<meta name="keywords" content="SWS, Simple Website System, Webmachine, Erlang, Django" /> 
+<meta name="description" content="SWS: Simple Website System" /> 
+<meta name="author" content="Martijn Rijkeboer" /> 
+<link rel="stylesheet" media="screen" href="/lib/css/reset.css" /> 
+<link rel="stylesheet" media="screen" href="/lib/css/site.css" /> 
 
-		<title>{% block title %}{% endblock %} &ndash; Simple Website System</title> 
-	</head> 
-	<body> 
+<title>{% block title %}{% endblock %} &ndash; Simple Website System</title> 
+</head> 
+<body> 
 
 
-		<div class="header"> 
-			<div class="wrapper"> 
-				<h1 class="left">Simple Website System</h1> 
-				{% include "menu.html" %}
-			</div>
-		</div> 
+<div class="header"> 
+<div class="wrapper"> 
+<h1 class="left">Simple Website System</h1> 
 
-		<div class="content">
-			<div class="wrapper">
-				{% block content %}{% endblock %}
-			</div>
-		</div>
+{% include "menu.html" %}
 
-		<div class="footer"> 
-			<div class="wrapper">
-				<p>&copy; 2010-2011 <a href="http://www.bunix.org/">Martijn Rijkeboer</a></p> 
-			</div>
-		</div>
+</div>
+</div> 
 
-	</body>
+<div class="content">
+<div class="wrapper">
+	
+{% block content %}{% endblock %}
+
+</div>
+</div>
+
+<div class="footer"> 
+<div class="wrapper">
+<p>&copy; 2010-2011 <a href="http://www.bunix.org/">Martijn Rijkeboer</a></p> 
+</div>
+</div>
+
+</body>
 </html>
