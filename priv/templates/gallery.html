@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title|capfirst }}{% endblock%}
+
+{% block content %}
+
+<h1>{{ title|capfirst }}</h1>
+
+{% for image, thumb, large in images %}
+<div>
+<a href="{{ large }}">
+<img src="{{ thumb }}" alt="thumbnail" />
+</a>
+</div>
+{% endfor %}
+
+{% endblock %}

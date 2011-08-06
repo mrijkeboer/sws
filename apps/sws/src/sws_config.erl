@@ -1,6 +1,6 @@
 %% -------------------------------------------------------------------
 %% sws_config.erl - SWS application configuration module
-%% 
+%%
 %% @author Martijn Rijkeboer <martijn@bunix.org>
 %% @copyright 2011 Martijn Rijkeboer
 %% @version {@vsn}, {@date}, {@time}
@@ -44,7 +44,8 @@
 		file_expire_time/0,
 		lib_expire_time/0,
 		misc_expire_time/0,
-		virtual_hosting/0
+		virtual_hosting/0,
+		gallery_template/0
 	]).
 
 
@@ -150,6 +151,16 @@ virtual_hosting() ->
 
 
 %% -------------------------------------------------------------------
+%% @spec gallery_template() ->
+%%				Value
+%% @doc Returns the name of the gallery template file.
+%% @end
+%% -------------------------------------------------------------------
+gallery_template() ->
+	get_value(gallery_template, "gallery.html").
+
+
+%% -------------------------------------------------------------------
 %% @spec get_value(Par, DefaultValue) ->
 %%				Value |
 %%				DefaultValue
@@ -211,5 +222,9 @@ misc_expire_time_test() ->
 
 virtual_hosting_test() ->
 	?assertEqual(false, virtual_hosting()).
+
+
+gallery_template_test() ->
+	?assertEqual("gallery.html", gallery_template()).
 
 -endif.

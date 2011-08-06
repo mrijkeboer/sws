@@ -36,8 +36,9 @@
 %% API
 -export([
 		add_seconds_to/2,
-		file_exists/1,
+    dir_readable/1,
 		file_readable/1,
+		gallery_fs_path/2,
 		get_host/1,
 		page_fs_path/2, 
 		static_fs_path/3,
@@ -59,14 +60,19 @@ add_seconds_to({Date, Time}, Seconds) when is_integer(Seconds) ->
 
 
 %% -------------------------------------------------------------------
-%% @spec file_exists(FsPath) ->
-%%				true |
+%% @spec dir_readable(FsPath) ->
+%%				{true, FileInfo} |
 %%				false
-%% @doc Check if the specified file exists.
+%% @doc Check if the specified dir exists and is readable.
 %% @end
 %% -------------------------------------------------------------------
-file_exists(FsPath) ->
-	filelib:is_regular(FsPath).
+dir_readable(FsPath) when is_list(FsPath) ->
+  case filelib:is_dir(FsPath) of
+		true ->
+      readable(FsPath);
+		false ->
+			false
+	end.
 
 
 %% -------------------------------------------------------------------
@@ -76,23 +82,11 @@ file_exists(FsPath) ->
 %% @doc Check if the specified file exists and is readable.
 %% @end
 %% -------------------------------------------------------------------
-file_readable(FsPath) ->
-	case file_exists(FsPath) of
+file_readable(FsPath) when is_list(FsPath) ->
+  case filelib:is_regular(FsPath) of
 		true ->
-			case file:read_file_info(FsPath) of
-				{ok, FileInfo} ->
-					case FileInfo#file_info.access of
-						read ->
-							{true, FileInfo};
-						read_write ->
-							{true, FileInfo};
-						_ ->
-							false
-					end;
-				_ ->
-					false
-			end;
-		_ ->
+      readable(FsPath);
+		false ->
 			false
 	end.
 
@@ -151,6 +145,16 @@ static_fs_path(Host, Uri, Type) when is_list(Uri), is_atom(Type) ->
 %% -------------------------------------------------------------------
 template_fs_path(Host) ->
 	get_fs_path(Host, "templates").
+
+
+%% -------------------------------------------------------------------
+%% @spec gallery_fs_path(Host) ->
+%%				FsPath
+%% @doc Get the path to the gallery for Host and Uri.
+%% @end
+%% -------------------------------------------------------------------
+gallery_fs_path(Host, Uri) ->
+	get_fs_path(Host, Uri).
 
 
 %% ===================================================================
@@ -278,6 +282,29 @@ cleanup(Uri) ->
 	mochiweb_util:safe_relative_path(RelUri).
 
 
+%% -------------------------------------------------------------------
+%% @spec readable(FsPath) ->
+%%				{true, FileInfo} |
+%%				false
+%% @doc Check if the specified path is readable.
+%% @end
+%% -------------------------------------------------------------------
+readable(FsPath) ->
+  case file:read_file_info(FsPath) of
+    {ok, FileInfo} ->
+      case FileInfo#file_info.access of
+        read ->
+          {true, FileInfo};
+        read_write ->
+          {true, FileInfo};
+        _ ->
+          false
+      end;
+    {error, _Reason} ->
+      false
+  end.
+
+
 %% ===================================================================
 %% Test functions
 %% ===================================================================
@@ -291,17 +318,16 @@ add_seconds_to_test() ->
 	?assert({{2010, 12, 3}, {20,1,0}} =:= T2).
 
 
-file_exists_test() ->
-	ThisFile = code:which(?MODULE),
-	?assert(file_exists(ThisFile)),
-	NonExistingFile = string:concat(ThisFile, ".erl"),
-	?assertNot(file_exists(NonExistingFile)).
+dir_readable_test() ->
+  ?assertMatch({true, _}, dir_readable("/tmp")),
+	?assert(filelib:is_dir("/root")),
+	?assertNot(file_readable("/root")).
 
 
 file_readable_test() ->
 	ThisFile = code:which(?MODULE),
 	?assertMatch({true, _}, file_readable(ThisFile)),
-	?assert(file_exists("/etc/shadow")),
+	?assert(filelib:is_regular("/etc/shadow")),
 	?assertNot(file_readable("/etc/shadow")).
 
 
@@ -339,6 +365,10 @@ static_fs_path_test() ->
 
 template_fs_path_test() ->
 	?assertEqual(filename:join([priv, "templates"]), template_fs_path("")).
+
+
+gallery_fs_path_test() ->
+	?assertEqual(filename:join([priv, "gallery", "flora"]), gallery_fs_path("", "/gallery/flora")).
 
 
 get_fs_path_test() ->
