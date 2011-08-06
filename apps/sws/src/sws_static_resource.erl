@@ -36,6 +36,7 @@
 %% API
 -export([
 		init/1,
+    service_available/2,
 		content_types_provided/2,
 		encodings_provided/2,
 		resource_exists/2,
@@ -46,6 +47,10 @@
 
 -include_lib("webmachine/include/webmachine.hrl").
 -include_lib("kernel/include/file.hrl").
+
+
+%% State record.
+-record(state, {host, uri, type, fs_path, mime, file_info}).
 
 
 %%====================================================================
@@ -61,10 +66,24 @@
 init(State) -> 
 	case proplists:get_value(type, State) of
 		undefined ->
-			{ok, State ++ [{type, file}]};
-		_ ->
-			{ok, State}
+			{ok, #state{type=file}};
+		Type ->
+			{ok, #state{type=Type}}
 	end.
+
+
+%% -------------------------------------------------------------------
+%% @spec service_available(ReqData, State) ->
+%%				{Availablility, ReqData, State}
+%% @doc Check if this service is available.
+%% @end
+%% -------------------------------------------------------------------
+service_available(ReqData, State) ->
+	Host = sws_util:get_host(ReqData),
+	Uri = wrq:path(ReqData),
+	Type = State#state.type,
+	FsPath = sws_util:static_fs_path(Host, Uri, Type),
+  {true, ReqData, State#state{host=Host, uri=Uri, fs_path=FsPath}}.
 
 
 %% -------------------------------------------------------------------
@@ -74,15 +93,10 @@ init(State) ->
 %% @end
 %% -------------------------------------------------------------------
 content_types_provided(ReqData, State) ->
-	case proplists:get_value(mime, State) of
+	case State#state.mime of
 		undefined ->
-			Host = sws_util:get_host(ReqData),
-			Uri = wrq:path(ReqData),
-			Type = proplists:get_value(type, State),
-			FsPath = sws_util:static_fs_path(Host, Uri, Type),
-			Mime = webmachine_util:guess_mime(FsPath),
-			State1 = State ++ [{host, Host}, {uri, Uri}, {fs_path, FsPath}, {mime, Mime}],
-			{[{Mime, to_binary}], ReqData, State1};
+			Mime = webmachine_util:guess_mime(State#state.fs_path),
+			{[{Mime, to_binary}], ReqData, State#state{mime=Mime}};
 		Mime ->
 			{[{Mime, to_binary}], ReqData, State}
 	end.
@@ -114,11 +128,9 @@ encodings_provided(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
-	FsPath = proplists:get_value(fs_path, State),
-	case sws_util:file_readable(FsPath) of
+	case sws_util:file_readable(State#state.fs_path) of
 		{true, FileInfo} ->
-			State1 = State ++ [{file_info, FileInfo}],
-			{true, ReqData, State1};
+			{true, ReqData, State#state{file_info=FileInfo}};
 		_ ->
 			{false, ReqData, State}
 	end.
@@ -131,8 +143,7 @@ resource_exists(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 to_binary(ReqData, State) ->
-	FsPath = proplists:get_value(fs_path, State),
-	{ok, Content} = file:read_file(FsPath),
+	{ok, Content} = file:read_file(State#state.fs_path),
 	{Content, ReqData, State}.
 
 
@@ -143,7 +154,7 @@ to_binary(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 last_modified(ReqData, State) ->
-	FileInfo = proplists:get_value(file_info, State),
+	FileInfo = State#state.file_info,
 	{FileInfo#file_info.mtime, ReqData, State}.
 
 
@@ -155,15 +166,16 @@ last_modified(ReqData, State) ->
 %% -------------------------------------------------------------------
 expires(ReqData, State) ->
 	UtcNow = calendar:universal_time(),
-	case proplists:get_value(type, State) of
+	ExpireTime = case State#state.type of
 		file ->
-			Expires = sws_util:add_seconds_to(UtcNow, sws_config:file_expire_time());
+			sws_config:file_expire_time();
 		lib ->
-			Expires = sws_util:add_seconds_to(UtcNow, sws_config:lib_expire_time());
+			sws_config:lib_expire_time();
 		misc ->
-			Expires = sws_util:add_seconds_to(UtcNow, sws_config:misc_expire_time());
+			sws_config:misc_expire_time();
 		_ ->
-			Expires = undefined
+			0
 	end,
+  Expires = sws_util:add_seconds_to(UtcNow, ExpireTime),
 	{Expires, ReqData, State}.
 

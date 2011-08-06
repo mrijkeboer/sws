@@ -36,6 +36,7 @@
 %% API
 -export([
 		init/1,
+    service_available/2,
 		encodings_provided/2,
 		resource_exists/2,
 		to_html/2,
@@ -45,6 +46,10 @@
 
 -include_lib("webmachine/include/webmachine.hrl").
 -include_lib("kernel/include/file.hrl").
+
+%% State record.
+-record(state, {host, uri, fs_path, file_info}).
+
 
 %%====================================================================
 %% API
@@ -56,8 +61,21 @@
 %% @doc Initialize resource.
 %% @end
 %% -------------------------------------------------------------------
-init(State) ->
-	{ok, State}.
+init(_State) ->
+  {ok, #state{}}.
+
+
+%% -------------------------------------------------------------------
+%% @spec service_available(ReqData, State) ->
+%%				{Availablility, ReqData, State}
+%% @doc Check if this service is available.
+%% @end
+%% -------------------------------------------------------------------
+service_available(ReqData, State) ->
+	Host = sws_util:get_host(ReqData),
+	Uri = wrq:path(ReqData),
+	FsPath = sws_util:page_fs_path(Host, Uri),
+  {true, ReqData, State#state{host=Host, uri=Uri, fs_path=FsPath}}.
 
 
 %% -------------------------------------------------------------------
@@ -86,14 +104,10 @@ encodings_provided(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
-	Host = sws_util:get_host(ReqData),
-	Uri = wrq:path(ReqData),
-	FsPath = sws_util:page_fs_path(Host, Uri),
-	case sws_util:file_readable(FsPath) of
+	case sws_util:file_readable(State#state.fs_path) of
 		{true, FileInfo} ->
-			State1 = State ++ [{host, Host}, {uri, Uri}, {fs_path, FsPath}, {file_info, FileInfo}],
-			{true, ReqData, State1};
-		_ ->
+      {true, ReqData, State#state{file_info=FileInfo}};
+		false ->
 			{false, ReqData, State}
 	end.
 
@@ -105,9 +119,9 @@ resource_exists(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 to_html(ReqData, State) ->
-	Host = proplists:get_value(host, State),
-	Uri = proplists:get_value(uri, State),
-	FsPath = proplists:get_value(fs_path, State),
+	Host = State#state.host,
+	Uri = State#state.uri,
+	FsPath = State#state.fs_path,
 	TemplatePath = sws_util:template_fs_path(Host),
 	erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
 	{ok, Content} = template:render([{uri, Uri}]),
@@ -121,7 +135,7 @@ to_html(ReqData, State) ->
 %% @end
 %% -------------------------------------------------------------------
 last_modified(ReqData, State) ->
-	FileInfo = proplists:get_value(file_info, State),
+	FileInfo = State#state.file_info,
 	{FileInfo#file_info.mtime, ReqData, State}.
 
 
