@@ -35,11 +35,11 @@
 
 %% API
 -export([
-		start/0,
-		start_link/0,
-		stop/0,
-		stop/1
-	]).
+    start/0,
+    start_link/0,
+    stop/0,
+    stop/1
+  ]).
 
 %%====================================================================
 %% API
@@ -47,78 +47,78 @@
 
 %% -------------------------------------------------------------------
 %% @spec ensure_started(App) ->
-%%				ok
+%%        ok
 %% @doc Make shure  the requested app is started.
 %% @end
 %% -------------------------------------------------------------------
 ensure_started(App) ->
-	case application:start(App) of
-		ok ->
-			ok;
-		{error, {already_started, App}} ->
-			ok
-	end.
+  case application:start(App) of
+    ok ->
+      ok;
+    {error, {already_started, App}} ->
+      ok
+  end.
 
 
 %% -------------------------------------------------------------------
 %% @spec start_link() ->
-%%				{ok,Pid::pid()}
+%%        {ok,Pid::pid()}
 %% @doc Starts the app for inclusion in a supervisor tree
 %% @end
 %% -------------------------------------------------------------------
 start_link() ->
-	ensure_started(crypto),
-	ensure_started(mochiweb),
-	application:set_env(
-		webmachine,
-		webmachine_logger_module,
-		webmachine_logger
-	),
-	ensure_started(webmachine),
-	sws_sup:start_link().
+  ensure_started(crypto),
+  ensure_started(mochiweb),
+  application:set_env(
+    webmachine,
+    webmachine_logger_module,
+    webmachine_logger
+  ),
+  ensure_started(webmachine),
+  sws_sup:start_link().
 
 
 %% -------------------------------------------------------------------
 %% @spec start() ->
-%%				ok
+%%        ok
 %% @doc Start the sws server.
 %% @end
 %% -------------------------------------------------------------------
 start() ->
-	ensure_started(crypto),
-	ensure_started(mochiweb),
-	application:set_env(
-		webmachine,
-		webmachine_logger_module,
-		webmachine_logger
-	),
-	ensure_started(webmachine),
-	application:start(sws).
+  ensure_started(crypto),
+  ensure_started(mochiweb),
+  application:set_env(
+    webmachine,
+    webmachine_logger_module,
+    webmachine_logger
+  ),
+  ensure_started(webmachine),
+  application:start(sws).
 
 
 %% -------------------------------------------------------------------
 %% @spec stop() ->
-%%				ok
+%%        ok
 %% @doc Stop the sws server.
 %% @end
 %% -------------------------------------------------------------------
 stop() ->
-	Res = application:stop(sws),
-	application:stop(webmachine),
-	application:stop(mochiweb),
-	application:stop(crypto),
-	Res.
+  Res = application:stop(sws),
+  application:stop(webmachine),
+  application:stop(mochiweb),
+  application:stop(crypto),
+  Res.
 
 
 %% -------------------------------------------------------------------
 %% @spec stop([Node]) ->
-%%				void
+%%        void
 %% @doc Stop the sws server on the specified node.
 %% @end
 %% -------------------------------------------------------------------
 stop([Node]) ->
-	case net_adm:ping(Node) of
-		pong -> rpc:cast(Node, init, stop, []);
-		_ -> io:format("No node named: ~s~n", [Node])
-	end,
-	init:stop().
+  case net_adm:ping(Node) of
+    pong -> rpc:cast(Node, init, stop, []);
+    _ -> io:format("No node named: ~s~n", [Node])
+  end,
+  init:stop().

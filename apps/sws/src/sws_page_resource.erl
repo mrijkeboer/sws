@@ -35,14 +35,14 @@
 
 %% API
 -export([
-		init/1,
+    init/1,
     service_available/2,
-		encodings_provided/2,
-		resource_exists/2,
-		to_html/2,
-		last_modified/2,
-		expires/2
-	]).
+    encodings_provided/2,
+    resource_exists/2,
+    to_html/2,
+    last_modified/2,
+    expires/2
+  ]).
 
 -include_lib("webmachine/include/webmachine.hrl").
 -include_lib("kernel/include/file.hrl").
@@ -57,7 +57,7 @@
 
 %% -------------------------------------------------------------------
 %% @spec init(State) ->
-%%				{ok, State}
+%%        {ok, State}
 %% @doc Initialize resource.
 %% @end
 %% -------------------------------------------------------------------
@@ -67,86 +67,86 @@ init(_State) ->
 
 %% -------------------------------------------------------------------
 %% @spec service_available(ReqData, State) ->
-%%				{Availablility, ReqData, State}
+%%        {Availablility, ReqData, State}
 %% @doc Check if this service is available.
 %% @end
 %% -------------------------------------------------------------------
 service_available(ReqData, State) ->
-	Host = sws_util:get_host(ReqData),
-	Uri = wrq:path(ReqData),
-	FsPath = sws_util:page_fs_path(Host, Uri),
+  Host = sws_util:get_host(ReqData),
+  Uri = wrq:path(ReqData),
+  FsPath = sws_util:page_fs_path(Host, Uri),
   {true, ReqData, State#state{host=Host, uri=Uri, fs_path=FsPath}}.
 
 
 %% -------------------------------------------------------------------
 %% @spec encodings_provided(ReqData, State) ->
-%%				{[{"identity", fun(X) -> X end},
-%%				  {"gzip", fun(X) -> zlib:gzip(X) end}],
-%%				 ReqData, State}
+%%        {[{"identity", fun(X) -> X end},
+%%          {"gzip", fun(X) -> zlib:gzip(X) end}],
+%%         ReqData, State}
 %% @doc Return encodings provided.
 %% @end
 %% -------------------------------------------------------------------
 encodings_provided(ReqData, State) ->
-	{
-		[
-			{"identity", fun(X) -> X end},
-			{"gzip", fun(X) -> zlib:gzip(X) end}
-		],
-		ReqData, State
-	}.
+  {
+    [
+      {"identity", fun(X) -> X end},
+      {"gzip", fun(X) -> zlib:gzip(X) end}
+    ],
+    ReqData, State
+  }.
 
 
 %% -------------------------------------------------------------------
 %% @spec resource_exists(ReqData, State) ->
-%%				{true, ReqData, State} |
-%%				{false, ReqData, State}
+%%        {true, ReqData, State} |
+%%        {false, ReqData, State}
 %% @doc Check if the requested resource exists (page).
 %% @end
 %% -------------------------------------------------------------------
 resource_exists(ReqData, State) ->
-	case sws_util:file_readable(State#state.fs_path) of
-		{true, FileInfo} ->
+  case sws_util:file_readable(State#state.fs_path) of
+    {true, FileInfo} ->
       {true, ReqData, State#state{file_info=FileInfo}};
-		false ->
-			{false, ReqData, State}
-	end.
+    false ->
+      {false, ReqData, State}
+  end.
 
 
 %% -------------------------------------------------------------------
 %% @spec to_html(ReqData, State) ->
-%%				{Content, ReqData, State}
+%%        {Content, ReqData, State}
 %% @doc Return the content of the resource as HTML.
 %% @end
 %% -------------------------------------------------------------------
 to_html(ReqData, State) ->
-	Host = State#state.host,
-	Uri = State#state.uri,
-	FsPath = State#state.fs_path,
-	TemplatePath = sws_util:template_fs_path(Host),
-	erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
-	{ok, Content} = template:render([{uri, Uri}]),
-	{Content, ReqData, State}.
+  Host = State#state.host,
+  Uri = State#state.uri,
+  FsPath = State#state.fs_path,
+  TemplatePath = sws_util:template_fs_path(Host),
+  erlydtl:compile(FsPath, template, [{doc_root, TemplatePath}]),
+  {ok, Content} = template:render([{uri, Uri}]),
+  {Content, ReqData, State}.
 
 
 %% -------------------------------------------------------------------
 %% @spec last_modified(ReqData, State) ->
-%%				{{{YYYY,MM,DD}, {Hour,Min,Sec}}, ReqData, State}
+%%        {{{YYYY,MM,DD}, {Hour,Min,Sec}}, ReqData, State}
 %% @doc Set the last modified time of the resource (page).
 %% @end
 %% -------------------------------------------------------------------
 last_modified(ReqData, State) ->
-	FileInfo = State#state.file_info,
-	{FileInfo#file_info.mtime, ReqData, State}.
+  FileInfo = State#state.file_info,
+  {FileInfo#file_info.mtime, ReqData, State}.
 
 
 %% -------------------------------------------------------------------
 %% @spec expires(ReqData, State) ->
-%%				{{{YYYY,MM,DD}, {Hour,Min,Sec}}, ReqData, State}
+%%        {{{YYYY,MM,DD}, {Hour,Min,Sec}}, ReqData, State}
 %% @doc Set the expire date of the resource (page).
 %% @end
 %% -------------------------------------------------------------------
 expires(ReqData, State) ->
-	UtcNow = calendar:universal_time(),
-	Expires = sws_util:add_seconds_to(UtcNow, sws_config:page_expire_time()),
-	{Expires, ReqData, State}.
+  UtcNow = calendar:universal_time(),
+  Expires = sws_util:add_seconds_to(UtcNow, sws_config:page_expire_time()),
+  {Expires, ReqData, State}.
 

@@ -44,64 +44,64 @@
 
 %% -------------------------------------------------------------------
 %% @spec start_link() ->
-%%				ServerRet
+%%        ServerRet
 %% @doc API for starting the supervisor.o
 %% @end
 %% -------------------------------------------------------------------
 start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 
 %% -------------------------------------------------------------------
 %% @spec upgrade() ->
-%%				ok
+%%        ok
 %% @doc Add processes if necessary.
 %% @end
 %% -------------------------------------------------------------------
 upgrade() ->
-	{ok, {_, Specs}} = init([]),
+  {ok, {_, Specs}} = init([]),
 
-	Old = sets:from_list(
-		[Name || {Name, _, _, _} <- supervisor:which_children(?MODULE)]),
-	New = sets:from_list([Name || {Name, _, _, _, _, _} <- Specs]),
-	Kill = sets:subtract(Old, New),
+  Old = sets:from_list(
+    [Name || {Name, _, _, _} <- supervisor:which_children(?MODULE)]),
+  New = sets:from_list([Name || {Name, _, _, _, _, _} <- Specs]),
+  Kill = sets:subtract(Old, New),
 
-	sets:fold(fun (Id, ok) ->
-				supervisor:terminate_child(?MODULE, Id),
-				supervisor:delete_child(?MODULE, Id),
-				ok
-		end, ok, Kill),
+  sets:fold(fun (Id, ok) ->
+        supervisor:terminate_child(?MODULE, Id),
+        supervisor:delete_child(?MODULE, Id),
+        ok
+    end, ok, Kill),
 
-	[supervisor:start_child(?MODULE, Spec) || Spec <- Specs],
-	ok.
+  [supervisor:start_child(?MODULE, Spec) || Spec <- Specs],
+  ok.
 
 
 %% -------------------------------------------------------------------
 %% @spec init([]) ->
-%%				SupervisorTree
+%%        SupervisorTree
 %% @doc Supervisor callback.
 %% @end
 %% -------------------------------------------------------------------
 init([]) ->
-	Ip = sws_config:ip(),
-	Port = sws_config:port(),
-	DispatchConfPath = sws_config:dispatch_conf_path(),
-	LogDir = sws_config:log_dir_path(),
+  Ip = sws_config:ip(),
+  Port = sws_config:port(),
+  DispatchConfPath = sws_config:dispatch_conf_path(),
+  LogDir = sws_config:log_dir_path(),
 
-	{ok, Dispatch} = file:consult(DispatchConfPath),
+  {ok, Dispatch} = file:consult(DispatchConfPath),
 
-	WebConfig = [
-		{ip, Ip},
-		{port, Port},
-		{log_dir, LogDir},
-		{dispatch, Dispatch}
-	],
+  WebConfig = [
+    {ip, Ip},
+    {port, Port},
+    {log_dir, LogDir},
+    {dispatch, Dispatch}
+  ],
 
-	Web = {
-		webmachine_mochiweb,
-		{webmachine_mochiweb, start, [WebConfig]},
-		permanent, 5000, worker, dynamic
-	},
+  Web = {
+    webmachine_mochiweb,
+    {webmachine_mochiweb, start, [WebConfig]},
+    permanent, 5000, worker, dynamic
+  },
 
-	{ok, { {one_for_one, 10, 10}, [Web]} }.
+  {ok, { {one_for_one, 10, 10}, [Web]} }.
 

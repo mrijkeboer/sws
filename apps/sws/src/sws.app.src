@@ -26,13 +26,13 @@
 %% -------------------------------------------------------------------
 
 {application,sws,
-	[
-		{description,"sws"},
-		{vsn,"1.0"},
-		{modules,[]},
-		{registered,[]},
-		{applications,[kernel,stdlib,crypto,mochiweb,webmachine]},
-		{mod,{sws_app,[]}},
-		{env,[]}
-	]
+  [
+    {description,"sws"},
+    {vsn,"1.0"},
+    {modules,[]},
+    {registered,[]},
+    {applications,[kernel,stdlib,crypto,mochiweb,webmachine]},
+    {mod,{sws_app,[]}},
+    {env,[]}
+  ]
 }.
