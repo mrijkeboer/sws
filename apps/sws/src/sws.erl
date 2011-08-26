@@ -68,6 +68,7 @@ ensure_started(App) ->
 %% -------------------------------------------------------------------
 start_link() ->
   ensure_started(crypto),
+  ensure_started(inets),
   ensure_started(mochiweb),
   application:set_env(
     webmachine,
@@ -86,6 +87,7 @@ start_link() ->
 %% -------------------------------------------------------------------
 start() ->
   ensure_started(crypto),
+  ensure_started(inets),
   ensure_started(mochiweb),
   application:set_env(
     webmachine,
@@ -106,6 +108,7 @@ stop() ->
   Res = application:stop(sws),
   application:stop(webmachine),
   application:stop(mochiweb),
+  application:stop(inets),
   application:stop(crypto),
   Res.
 
